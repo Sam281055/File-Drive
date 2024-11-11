@@ -5,7 +5,7 @@ export function Header() {
     <div className="border-b bg-gray-50">
       <div className="items-center container mx-auto justify-between flex">
         <div className="flex">
-          <img className="w-20 h-20" src="/LogoNoBackground.png" alt="" />
+          <img className="w-20 h-20" src="/Logo-removebg-preview.png" alt="" />
           <h1 className="text-2xl font-serif font-bolt flex my-auto">
             CloudVault
           </h1>
