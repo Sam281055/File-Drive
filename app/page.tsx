@@ -20,7 +20,7 @@ export default function Home() {
       {files?.map((file) => {
         return <div key={file._id}>{file.name}</div>;
       })}
-
+      
       <Button
         onClick={() =>
         {

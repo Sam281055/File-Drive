@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 
-import {internal} from "./_generated/api";
+import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
 const http = httpRouter();
@@ -24,33 +24,37 @@ http.route({
             switch(result.type){
                 case 'user.created':
                     await ctx.runMutation(internal.users.createUser, {
-                        userId: result.data.id,
-                        email: result.data.email_addresses[0]?.email_address,
-                        name: `${result.data.first_name} ${result.data.last_name}`,
-                        profileImage: result.data.image_url
+                        tokenIdentifier: `https://magical-cat-15.clerk.accounts.dev|${result.data.id}`
                     });
                     break;
-                case 'user.updated':
-                    await ctx.runMutation(internal.users.updateUser, {
-                        userId: result.data.id,
-                        profileImage: result.data.image_url
-                    });
+                case 'organizationMembership.created':
+                    await ctx.runMutation(internal.users.addOrgIdToUser, {
+                        tokenIdentifier: `https://magical-cat-15.clerk.accounts.dev|${result.data.public_user_data.user_id}`,
+                        orgId: result.data.organization.id
+                    })
+                  
                     break;
-                case 'user.deleted':
-                    await ctx.runMutation(internal.users.deleteUser, {
-                        userId: result.data.id!
-                    });
-                    break;
-                return new Response(null, {
-                    status: 200
-                })
+                // case 'user.updated':
+                //     await ctx.runMutation(internal.users.updateUser, {
+                //         userId: result.data.id,
+                //         profileImage: result.data.image_url
+                //     });
+                //     break;
+                // case 'user.deleted':
+                //     await ctx.runMutation(internal.users.deleteUser, {
+                //         userId: result.data.id!
+                //     });
+                //     break;
             }
+            return new Response(null, {
+                status: 200
+            });
         } catch(err) {
-            console.error(err);
             return new Response('Webhook Error', {
                 status: 400
             });
         }
 
     })
-})
+});
+export default http;

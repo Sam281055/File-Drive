@@ -26,6 +26,8 @@ export const getFiles = query({
   },
   async handler(ctx, args) {
     const identity = await ctx.auth.getUserIdentity();
+    console.log(identity);
+    
     if(!identity){
         return [];
     }

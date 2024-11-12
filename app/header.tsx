@@ -1,4 +1,5 @@
-import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
+import { OrganizationSwitcher, SignInButton, SignOutButton, UserButton } from "@clerk/nextjs";
 
 export function Header() {
   return (
@@ -13,6 +14,11 @@ export function Header() {
         <div className="flex gap-2">
           <OrganizationSwitcher />
           <UserButton />
+          <SignOutButton>
+            <SignInButton>
+              <Button>SignIn</Button>
+            </SignInButton>
+          </SignOutButton>
         </div>
       </div>
     </div>
