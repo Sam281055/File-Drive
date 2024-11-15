@@ -11,29 +11,33 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import { useOrganization, useUser } from "@clerk/clerk-react";
-import { useSession } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(1).max(200),
-  file: z.custom<File | null>((val) => val instanceof File, "Required"),
+  file: z
+    .custom<FileList>((val) => val instanceof FileList, "Required")
+    .refine((files) => files.length > 0, `Required`),
 });
 
 export default function Home() {
+  const { toast } = useToast();
   const organization = useOrganization();
   const user = useUser();
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,15 +46,46 @@ export default function Home() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const fileRef = form.register("file");
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
+    console.log(values.file);
+    const postUrl = await generateUploadUrl();
+    const result = await fetch(postUrl, {
+      method: "POST",
+      headers: { "Content-Type": values.file[0]!.type },
+      body: values.file[0],
+    });
+    const { storageId } = await result.json();
+    if (!orgId) return;
+    try {
+      await createFile({
+        name: values.title,
+        fileId: storageId,
+        orgId,
+      });
+      form.reset();
+      setIsFileDialogOpen(false);
+      toast({
+        variant: "success",
+        title: "File Uploaded",
+        description: "Now everyone can view your file",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Your file could not be uploaded, try again later",
+      });
+    }
   }
 
   let orgId: string | undefined = undefined;
   if (organization.isLoaded && user.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id;
   }
-  const Session = useSession();
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
   const createFile = useMutation(api.files.createFile);
   const files = useQuery(api.files.getFiles, orgId ? { orgId } : "skip");
   return (
@@ -58,19 +93,15 @@ export default function Home() {
       <div className="flex justify-between items-center">
         <p className="text-4xl font-bold">Your Files</p>
 
-        <Dialog>
+        <Dialog
+          open={isFileDialogOpen}
+          onOpenChange={(isOpen) => {
+            setIsFileDialogOpen(isOpen);
+            form.reset();
+          }}
+        >
           <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                if (!orgId) return;
-                createFile({
-                  name: "Hello World",
-                  orgId,
-                });
-              }}
-            >
-              Upload File
-            </Button>
+            <Button>Upload File</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -88,7 +119,7 @@ export default function Home() {
                         <FormItem>
                           <FormLabel>Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="shadcn" {...field} />
+                            <Input {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -96,24 +127,19 @@ export default function Home() {
                     <FormField
                       control={form.control}
                       name="file"
-                      render={({ field: {onChange}, ...field }) => (
+                      render={() => (
                         <FormItem>
                           <FormLabel>File</FormLabel>
                           <FormControl>
-                            <Input
-                              type="file"
-                              placeholder="shadcn"
-                              onChange={(event)=>{
-                                if(!event.target.files)return;
-                                onChange(event.target.files[0]);
-                              }}
-                              {...field}
-                            />
+                            <Input type="file" {...fileRef} />
                           </FormControl>
                         </FormItem>
                       )}
                     />
-                    <Button type="submit">Submit</Button>
+                    <Button type="submit" disabled={form.formState.isLoading} className="flex gap-1">
+                      {form.formState.isLoading && (<Loader2 className="h-4 w-4 animate-spin"/>)}
+                      Submit
+                    </Button>
                   </form>
                 </Form>
               </DialogDescription>
