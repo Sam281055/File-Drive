@@ -22,12 +22,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Download, FilePen, FileX, Menu } from "lucide-react";
-import { useState } from "react";
+import {
+  Download,
+  FileMinus,
+  FilePen,
+  FileX,
+  ImageIcon,
+  Menu,
+  ScrollText,
+} from "lucide-react";
+import { ReactNode, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 function FileCardActions({ file }: { file: Doc<"files"> }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -47,7 +56,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={async() => {
+              onClick={async () => {
                 try {
                   await deleteFile({ fileId: file._id });
                   toast({
@@ -59,7 +68,8 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
                   toast({
                     variant: "destructive",
                     title: "Something went wrong",
-                    description: "Your file could not be uploaded, try again later",
+                    description:
+                      "Your file could not be uploaded, try again later",
                   });
                 }
               }}
@@ -80,10 +90,10 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
             Download
           </DropdownMenuItem>
 
-          <DropdownMenuItem className="flex gap-1 cursor-pointer items-center">
+          {/* <DropdownMenuItem className="flex gap-1 cursor-pointer items-center">
             <FilePen className="w-4 h-4" />
             Edit
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
 
           <DropdownMenuItem
             onClick={() => setIsConfirmOpen(true)}
@@ -98,18 +108,35 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
   );
 }
 
+function getFileUrl(fileId: Id<"_storage">):string {
+  return `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${fileId}`;
+}
+
 export function FileCard({ file }: { file: Doc<"files"> }) {
+  const typeIcons = {
+    image: <ImageIcon />,
+    pdf: <FileMinus />,
+    csv: <ScrollText />,
+  } as Record<Doc<"files">["type"], ReactNode>;
+
   return (
     <Card>
       <CardHeader className="relative">
-        <CardTitle>{file.name}</CardTitle>
+        <CardTitle className="flex gap-2">
+          <div className="flex justify-center">{typeIcons[file.type]}</div>
+          {" "}
+          {file.name}
+        </CardTitle>
+
         <div className="absolute top-2 right-3">
           <FileCardActions file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
       <CardContent>
-        <p>Card content</p>
+        {file.type === "image" && (
+          <Image alt={file.name} width="200" height="100" src={getFileUrl(file.fileId)}/>
+        )}
       </CardContent>
       <CardFooter>
         {/* <Button>Download</Button> */}
