@@ -95,4 +95,15 @@ export const deleteFile = mutation({
 
     await ctx.db.delete(args.fileId);
   }
+});
+
+export const previewFile = query({
+  args: {
+    fileId: v.any()
+  },
+  async handler(ctx, args){
+    const blob = await ctx.storage.getUrl(args.fileId);
+    if(blob === null)return null;
+    return blob.toString();
+  }
 })
