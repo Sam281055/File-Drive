@@ -30,6 +30,7 @@ import {
   Menu,
   ScrollText,
   Star,
+  StarsIcon,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -37,7 +38,7 @@ import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/hooks/use-toast";
 
-function FileCardActions({ file }: { file: Doc<"files"> }) {
+function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited:boolean }) {
   const fileUrl = getFileUrl(file.fileId);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const deleteFile = useMutation(api.files.deleteFile);
@@ -96,8 +97,11 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
             Download
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={()=>toggleFavorite({fileId: file._id})} className="flex gap-1 cursor-pointer items-center">
-            <Star className="w-4 h-4" />
+          <DropdownMenuItem
+            onClick={() => toggleFavorite({ fileId: file._id })}
+            className="flex gap-1 cursor-pointer items-center"
+          >
+            {isFavorited ? <Star className="w-4 h-4" fill="yellow"/> : <Star className="w-4 h-4" fill="none"/>}
             Favorite
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -125,12 +129,22 @@ function getSubmitDate(fileDate: number): Date {
   return _creationTime;
 }
 
-export function FileCard({ file }: { file: Doc<"files"> }) {
+export function FileCard({
+  file,
+  favorites,
+}: {
+  file: Doc<"files">;
+  favorites: Doc<"favorites">[];
+}) {
   const typeIcons = {
     image: <ImageIcon />,
     pdf: <FileMinus />,
     csv: <ScrollText />,
   } as Record<Doc<"files">["type"], ReactNode>;
+
+  const isFavorited = favorites.some(
+    (favorite)=>favorite.fileId===file._id)
+  
 
   return (
     <Card>
@@ -141,7 +155,7 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
         </CardTitle>
 
         <div className="absolute top-2 right-3">
-          <FileCardActions file={file} />
+          <FileCardActions isFavorited={isFavorited} file={file} />
         </div>
         {/* <CardDescription>Card Description</CardDescription> */}
       </CardHeader>
