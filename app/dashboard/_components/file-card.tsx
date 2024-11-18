@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -25,11 +25,11 @@ import {
 import {
   Download,
   FileMinus,
-  FilePen,
   FileX,
   ImageIcon,
   Menu,
   ScrollText,
+  Star,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -41,6 +41,7 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
   const fileUrl = getFileUrl(file.fileId);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const deleteFile = useMutation(api.files.deleteFile);
+  const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
   return (
     <>
@@ -85,17 +86,21 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
           <Menu className="w-6 h-6" />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          <DropdownMenuItem className="flex gap-1 cursor-pointer items-center" onClick={async () => {
+          <DropdownMenuItem
+            className="flex gap-1 cursor-pointer items-center"
+            onClick={async () => {
               window.open(fileUrl, "_blank");
-          }}>
+            }}
+          >
             <Download className="w-4 h-4" />
             Download
           </DropdownMenuItem>
-
-          {/* <DropdownMenuItem className="flex gap-1 cursor-pointer items-center">
-            <FilePen className="w-4 h-4" />
-            Edit
-          </DropdownMenuItem> */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={()=>toggleFavorite({fileId: file._id})} className="flex gap-1 cursor-pointer items-center">
+            <Star className="w-4 h-4" />
+            Favorite
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
 
           <DropdownMenuItem
             onClick={() => setIsConfirmOpen(true)}
@@ -110,12 +115,12 @@ function FileCardActions({ file }: { file: Doc<"files"> }) {
   );
 }
 
-function getFileUrl(fileId: Id<"_storage">):string {
-  const previewFile = useQuery(api.files.previewFile,{ fileId: fileId});
-  return previewFile? previewFile: "Not Found";
+function getFileUrl(fileId: Id<"_storage">): string {
+  const previewFile = useQuery(api.files.previewFile, { fileId: fileId });
+  return previewFile ? previewFile : "Not Found";
 }
 
-function getSubmitDate(fileDate: number):Date{
+function getSubmitDate(fileDate: number): Date {
   const _creationTime = new Date(Math.floor(fileDate));
   return _creationTime;
 }
@@ -131,8 +136,7 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
     <Card>
       <CardHeader className="relative">
         <CardTitle className="flex gap-2">
-          <div className="flex justify-center">{typeIcons[file.type]}</div>
-          {" "}
+          <div className="flex justify-center">{typeIcons[file.type]}</div>{" "}
           {file.name}
         </CardTitle>
 
@@ -143,15 +147,30 @@ export function FileCard({ file }: { file: Doc<"files"> }) {
       </CardHeader>
       <CardContent>
         {file.type === "image" && (
-          <img alt={file.name} width="300" height="100" src={getFileUrl(file.fileId)?? <ImageIcon className="w-32 h-32 mx-auto my-auto"/>}/>
+          <img
+            alt={file.name}
+            width="300"
+            height="100"
+            src={
+              getFileUrl(file.fileId) ?? (
+                <ImageIcon className="w-32 h-32 mx-auto my-auto" />
+              )
+            }
+          />
         )}
-        {file.type === "csv" && <ScrollText className="mx-auto my-auto w-32 h-32"/>}
-        {file.type === "pdf" && <FileMinus className="mx-auto my-auto w-32 h-32"/>}
+        {file.type === "csv" && (
+          <ScrollText className="mx-auto my-auto w-32 h-32" />
+        )}
+        {file.type === "pdf" && (
+          <FileMinus className="mx-auto my-auto w-32 h-32" />
+        )}
       </CardContent>
       <CardFooter>
         {/* <Button>Download</Button> */}
-        <p className="text-xl"><span className="font-semibold">Submited:</span> {getSubmitDate(file._creationTime).toLocaleDateString("Es")}</p>
-
+        <p className="text-xl">
+          <span className="font-semibold">Submited:</span>{" "}
+          {getSubmitDate(file._creationTime).toLocaleDateString("Es")}
+        </p>
       </CardFooter>
     </Card>
   );
