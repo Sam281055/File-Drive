@@ -5,8 +5,7 @@ import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Header } from "./header";
 import { Toaster } from "@/components/ui/toaster";
-
-
+import { Footer } from "./footer";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,14 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} dynamic>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      dynamic
+    >
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <Toaster/>
-          <Header/>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <ConvexClientProvider>
+            <Toaster />
+            <Header />
+            {children}
+            <Footer />
+          </ConvexClientProvider>
         </body>
       </html>
     </ClerkProvider>
