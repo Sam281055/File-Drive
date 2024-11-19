@@ -6,6 +6,10 @@ export const fileTypes = v.union(
   v.literal("csv"),
   v.literal("pdf")
 );
+export const roles = v.union(
+  v.literal("admin"),
+  v.literal("member")
+);
 
 export default defineSchema({
   files: defineTable({
@@ -17,10 +21,15 @@ export default defineSchema({
   favorites: defineTable({
     fileId: v.id("files"),
     orgId: v.string(),
-    userId: v.id("users")
+    userId: v.id("users"),
   }).index("by_userId_orgId_fileId", ["userId", "orgId", "fileId"]),
   users: defineTable({
     tokenIdentifier: v.string(),
-    orgIds: v.array(v.string()),
+    orgIds: v.array(
+      v.object({
+        orgId: v.string(),
+        role: roles
+      })
+    ),
   }).index("by_tokenIdentifier", ["tokenIdentifier"]),
 });

@@ -37,6 +37,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/hooks/use-toast";
+import { Protect } from "@clerk/nextjs";
 
 function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited:boolean }) {
   const fileUrl = getFileUrl(file.fileId);
@@ -104,6 +105,12 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
             {isFavorited ? <Star className="w-4 h-4" fill="yellow"/> : <Star className="w-4 h-4" fill="none"/>}
             Favorite
           </DropdownMenuItem>
+
+
+    <Protect
+    role="org:admin"
+      fallback={<></>}
+    >
           <DropdownMenuSeparator />
 
           <DropdownMenuItem
@@ -113,6 +120,8 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
             <FileX className="w-4 h-4" />
             Delete
           </DropdownMenuItem>
+          </Protect>
+
         </DropdownMenuContent>
       </DropdownMenu>
     </>

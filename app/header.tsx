@@ -11,6 +11,9 @@ export function Header() {
             CloudVault
           </h1>
         </div>
+
+
+        
         <div className="flex gap-2">
           <OrganizationSwitcher />
           <UserButton />
