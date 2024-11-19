@@ -9,7 +9,15 @@ import { FileCard } from "@/app/dashboard/_components/file-card";
 import { SearchBar } from "@/app/dashboard/_components/SearchBar";
 import { UploadButton } from "@/app/dashboard/_components/upload-button";
 
-export function FileBrowser({title, favoritesOnly}:{title:string, favoritesOnly?:boolean}) {
+export function FileBrowser({
+  title,
+  favoritesOnly,
+  deletedOnly,
+}: {
+  title: string;
+  favoritesOnly?: boolean;
+  deletedOnly?: boolean;
+}) {
   const organization = useOrganization();
   const user = useUser();
   const [query, setQuery] = useState("");
@@ -18,11 +26,17 @@ export function FileBrowser({title, favoritesOnly}:{title:string, favoritesOnly?
   if (organization.isLoaded && user.isLoaded) {
     orgId = organization.organization?.id ?? user.user?.id;
   }
-  
-  const favorites = useQuery(api.files.getAllFavorites, orgId ? {orgId}:'skip')
 
-  const files = useQuery(api.files.getFiles, orgId ? { orgId, query, favorites:favoritesOnly } : "skip");
-  
+  const favorites = useQuery(
+    api.files.getAllFavorites,
+    orgId ? { orgId } : "skip"
+  );
+
+  const files = useQuery(
+    api.files.getFiles,
+    orgId ? { orgId, query, favoritesOnly, deletedOnly } : "skip"
+  );
+
   const isLoading = files === undefined;
   return (
     <>
@@ -34,33 +48,40 @@ export function FileBrowser({title, favoritesOnly}:{title:string, favoritesOnly?
           </div>
         )}
 
+        {!isLoading && (
+          <>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-4xl font-bold">{title}</h3>
+              <SearchBar query={query} setQuery={setQuery}/>
+
+              <UploadButton />
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              {files?.map((file) => {
+                return (
+                  <FileCard
+                    favorites={favorites ?? []}
+                    key={file._id}
+                    file={file}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
+
         {!isLoading && !query && files.length === 0 && (
-          <div className="flex flex-col gap-8 w-full items-center mt-24">
+          <div className="flex flex-col gap-8 w-full items-center mt-10">
             <Image
               alt="an image of a picture and directory icon"
-              width="300"
-              height="300"
+              width="250"
+              height="250"
               src="/empty.svg"
             />
             <div className="text-2xl">You have not files, upload one now</div>
             <UploadButton />
           </div>
-        )}
-
-        {!isLoading && (
-          <>
-            <div className="flex justify-between items-center mb-8">
-              <h3 className="text-4xl font-bold">{title}</h3>
-              <UploadButton />
-            </div>
-            <SearchBar query={query} setQuery={setQuery} />
-
-            <div className="grid grid-cols-4 gap-4">
-              {files?.map((file) => {
-                return <FileCard favorites={favorites ?? []} key={file._id} file={file} />;
-              })}
-            </div>
-          </>
         )}
       </div>
     </>

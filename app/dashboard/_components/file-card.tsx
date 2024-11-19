@@ -31,6 +31,8 @@ import {
   ScrollText,
   Star,
   StarsIcon,
+  Trash,
+  UndoIcon,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -38,11 +40,19 @@ import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { useToast } from "@/hooks/use-toast";
 import { Protect } from "@clerk/nextjs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorited:boolean }) {
+function FileCardActions({
+  file,
+  isFavorited,
+}: {
+  file: Doc<"files">;
+  isFavorited: boolean;
+}) {
   const fileUrl = getFileUrl(file.fileId);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const deleteFile = useMutation(api.files.deleteFile);
+  const restoreFile = useMutation(api.files.restoreFile);
   const toggleFavorite = useMutation(api.files.toggleFavorite);
   const { toast } = useToast();
   return (
@@ -52,8 +62,8 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              file and remove your data from our servers.
+              This action will mark the file for our deleteion process. Files
+              are deleted periodically
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -65,7 +75,7 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
                   toast({
                     variant: "default",
                     title: "File deleted",
-                    description: "Your file is now gone from the system",
+                    description: "Your file will be deleted soon",
                   });
                 } catch (error) {
                   toast({
@@ -102,26 +112,40 @@ function FileCardActions({ file, isFavorited }: { file: Doc<"files">, isFavorite
             onClick={() => toggleFavorite({ fileId: file._id })}
             className="flex gap-1 cursor-pointer items-center"
           >
-            {isFavorited ? <Star className="w-4 h-4" fill="yellow"/> : <Star className="w-4 h-4" fill="none"/>}
+            {isFavorited ? (
+              <Star className="w-4 h-4" fill="yellow" />
+            ) : (
+              <Star className="w-4 h-4" fill="none" />
+            )}
             Favorite
           </DropdownMenuItem>
 
+          <Protect role="org:admin" fallback={<></>}>
+            <DropdownMenuSeparator />
 
-    <Protect
-    role="org:admin"
-      fallback={<></>}
-    >
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onClick={() => setIsConfirmOpen(true)}
-            className="flex gap-1 cursor-pointer text-red-600 items-center"
-          >
-            <FileX className="w-4 h-4" />
-            Delete
-          </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                if (file.shouldDelete) {
+                  restoreFile({
+                    fileId: file._id,
+                  });
+                } else {
+                  setIsConfirmOpen(true);
+                }
+              }}
+              className="flex gap-1 cursor-pointer items-center"
+            >
+              {file.shouldDelete ? (
+                <div className="text-green-600 flex gap-1 cursor-pointer items-center">
+                  <UndoIcon className="w-4 h-4" /> Restore
+                </div>
+              ) : (
+                <div className="text-red-600 flex gap-1 cursor-pointer items-center">
+                  <FileX className="w-4 h-4" /> Delete
+                </div>
+              )}
+            </DropdownMenuItem>
           </Protect>
-
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -145,6 +169,10 @@ export function FileCard({
   file: Doc<"files">;
   favorites: Doc<"favorites">[];
 }) {
+  const userProfile = useQuery(api.users.getUserProfile, {
+    userId: file.userId
+  })
+
   const typeIcons = {
     image: <ImageIcon />,
     pdf: <FileMinus />,
@@ -152,8 +180,8 @@ export function FileCard({
   } as Record<Doc<"files">["type"], ReactNode>;
 
   const isFavorited = favorites.some(
-    (favorite)=>favorite.fileId===file._id)
-  
+    (favorite) => favorite.fileId === file._id
+  );
 
   return (
     <Card>
@@ -188,12 +216,21 @@ export function FileCard({
           <FileMinus className="mx-auto my-auto w-32 h-32" />
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex">
         {/* <Button>Download</Button> */}
-        <p className="text-xl">
-          <span className="font-semibold">Submited:</span>{" "}
-          {getSubmitDate(file._creationTime).toLocaleDateString("Es")}
-        </p>
+        <div className="text-xl text-gray-700">
+          <span className="font-semibold">Uploaded on:</span>{" "}
+          {getSubmitDate(file._creationTime).toLocaleDateString("Es")} 
+          <div className="flex">
+          <Avatar className="w-6 h-6">
+            <AvatarImage src={userProfile?.image}/>
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <p className="my-auto px-2">{userProfile?.name}</p>
+          </div>
+        </div>
+
+
       </CardFooter>
     </Card>
   );
