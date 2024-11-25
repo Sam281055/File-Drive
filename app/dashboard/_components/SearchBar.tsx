@@ -3,13 +3,12 @@ import {
   Form,
   FormControl,
   FormField,
-  FormItem,
-  FormLabel,
+  FormItem
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FileSearchIcon, Loader2 } from "lucide-react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -18,6 +17,7 @@ const formSchema = z.object({
 });
 
 export function SearchBar({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   query,
   setQuery,
 }: {

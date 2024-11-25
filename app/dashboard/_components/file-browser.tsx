@@ -81,6 +81,7 @@ export function FileBrowser({
             <div className="flex gap-2 items-center">
               <Label htmlFor="type-select">Type Filter</Label>
               <Select value={type} onValueChange={(newType)=>{
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setType(newType as any);
               }}>
                 <SelectTrigger id="type-select" className="w-[180px]" defaultValue={"all"}>

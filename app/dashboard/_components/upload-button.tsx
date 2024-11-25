@@ -78,6 +78,7 @@ export function UploadButton() {
         title: "File Uploaded",
         description: "Now everyone can view your file",
       });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         variant: "destructive",

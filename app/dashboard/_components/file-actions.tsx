@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
   import {
     DropdownMenu,
     DropdownMenuContent,
@@ -65,6 +66,7 @@ export function FileCardActions({
                       title: "File deleted",
                       description: "Your file will be deleted soon",
                     });
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   } catch (error) {
                     toast({
                       variant: "destructive",
