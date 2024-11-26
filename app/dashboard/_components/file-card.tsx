@@ -17,6 +17,7 @@ import { Doc } from "@/convex/_generated/dataModel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatRelative } from "date-fns"
 import { FileCardActions, getFileUrl } from "./file-actions";
+import Image from "next/image";
 
 export function FileCard({
   file,
@@ -48,7 +49,7 @@ export function FileCard({
       </CardHeader>
       <CardContent>
         {file.type === "image" && (
-          <img
+          <Image
             alt={file.name}
             width="300"
             height="100"
