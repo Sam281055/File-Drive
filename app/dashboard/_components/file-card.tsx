@@ -49,7 +49,7 @@ export function FileCard({
       </CardHeader>
       <CardContent>
         {file.type === "image" && (
-          <Image
+          <img
             alt={file.name}
             width="300"
             height="100"
